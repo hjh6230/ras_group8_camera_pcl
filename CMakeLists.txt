@@ -146,6 +146,7 @@ add_executable(example_voxelgrid src/example_voxelgrid.cpp)
 add_executable(example_planarsegmentation src/example_planarsegmentation.cpp)
 add_executable (segmentation src/segmentation.cpp)
 add_executable (outlier_removal src/outlier_removal.cpp)
+add_executable(record src/record.cpp)
 #add_executable (cluster_extraction src/cluster_extraction.cpp)
 
 ## Rename C++ executable without prefix
@@ -166,6 +167,7 @@ target_link_libraries(example_voxelgrid ${catkin_LIBRARIES})
 target_link_libraries(example_planarsegmentation ${catkin_LIBRARIES})
 target_link_libraries (segmentation ${PCL_LIBRARIES})
 target_link_libraries (outlier_removal ${catkin_LIBRARIES})
+target_link_libraries(record ${catkin_LIBRARIES})
 #target_link_libraries (cluster_extraction ${catkin_LIBRARIES})
 #target_link_libraries (cluster_extraction ${PCL_LIBRARIES})
 #############
