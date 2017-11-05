@@ -13,6 +13,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
 )
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FLANN REQUIRED flann)
+if(FLANN_CFLAGS)
+   add_definitions(${FLANN_CFLAGS})
+ endif(FLANN_CFLAGS) 
+
 find_package(PCL 1.3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
@@ -170,6 +177,24 @@ target_link_libraries (outlier_removal ${catkin_LIBRARIES})
 target_link_libraries(record ${catkin_LIBRARIES})
 #target_link_libraries (cluster_extraction ${catkin_LIBRARIES})
 #target_link_libraries (cluster_extraction ${PCL_LIBRARIES})
+
+
+
+
+ 
+
+
+find_package(HDF5)
+
+if(HDF5_FOUND)
+
+
+add_executable(ras_group8_recognition src/recognition.cpp)
+  target_link_libraries(ras_group8_recognition ${PCL_LIBRARIES} 
+                                        ${Boost_LIBRARIES} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY} 
+                                        )
+endif(HDF5_FOUND)
+
 #############
 ## Install ##
 #############

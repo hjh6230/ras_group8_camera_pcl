@@ -4,65 +4,110 @@
 #include <pcl/conversions.h> //<pcl/ros/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/features/vfh.h>
+#include <pcl/features/normal_3d.h>
 #include <iostream>
 #include <pcl/io/io.h>
 #include <pcl/io/pcd_io.h>
 #include <boost/lexical_cast.hpp>
 #include "string"
 
-class recordPC
+class recognization
 {
 public:	
 	ros::NodeHandle& nodeHandle_;
 
   	ros::Subscriber PCsub_;
 
-  	pcl::PCDWriter writer;
+  	
 
 	int count;
 	int maxsample;
 	std::string modname;
 
-	recordPC(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
+	recognization(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
 	{
-		if (!readParameters()) {
-	    ROS_ERROR("Could not read parameters.");
-	    ros::requestShutdown();
-	  }
+		// if (!readParameters()) {
+	 //    ROS_ERROR("Could not read parameters.");
+	 //    ros::requestShutdown();
+	 //  }
+		maxsample=20;
+		modname="Cube";
 	  count=0;
-	  PCsub_=nodeHandle_.subscribe("/pc_tut/cluster0",1,&recordPC::recordCB,this);
+	  PCsub_=nodeHandle_.subscribe("/pcl_tut/cluster0",1,&recognization::recognizationCB,this);
 	  ROS_INFO("Successfully launchednode.");
 
 
 
 	}
-	virtual ~recordPC()
+	virtual ~recognization()
 	{
 	}
 
 	
-	bool readParameters()
+	// bool readParameters()
+	// {
+	// 	if (!nodeHandle_.getParam("maxsample",
+ //                            maxsample))
+ //    		return false;
+ //    	if (!nodeHandle_.getParam("modname",
+ //                            modname))
+ //    		return false;
+
+ //    	return true;
+
+
+	// }
+
+	void recognizationCB(const sensor_msgs::PointCloud2ConstPtr& input)
 	{
-		if (!nodeHandle_.getParam("maxsample",
-                            maxsample))
-    		return false;
-    	if (!nodeHandle_.getParam("modname",
-                            modname))
-    		return false;
+		if(count<maxsample)
+		{
+			//pcl::PCDWriter writer;
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+			//pcl::PointCloud<pcl::PointXYZ> cloud;
+			pcl::fromROSMsg (*input, *cloud);
 
-    	return true;
+			//search fo normals
+
+			pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  			ne.setInputCloud (cloud);
+  			pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+  			ne.setSearchMethod (tree);
+
+			pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal> ());
+			ne.setRadiusSearch (0.03);
+
+		  	// Compute the features
+		  	ne.compute (*normals);
+
+			pcl::VFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::VFHSignature308> vfh;
+			vfh.setInputCloud (cloud);
+			vfh.setInputNormals (normals);
+			vfh.setSearchMethod (tree);
+			  // Output datasets
+			pcl::PointCloud<pcl::VFHSignature308>::Ptr vfhs (new pcl::PointCloud<pcl::VFHSignature308> ());
+
+			  // Compute the features
+			vfh.compute (*vfhs);
 
 
-	}
 
-	void recordCB(const sensor_msgs::PointCloud2ConstPtr& input)
-	{
-		pcl::PointCloud<pcl::PointXYZ> cloud;
-		pcl::fromROSMsg (*input, cloud);
-		std::stringstream ss;
-		ss<<"cloud_cluster_"<<modname<<"_"<<count<<".pcd";
-		writer.write<pcl::PointXYZ>(ss.str(),cloud,false);
-		count++;
+			std::stringstream ss;
+			ss<<"cloud_cluster_"<<modname<<"_"<<count<<".pcd";
+			std::stringstream vss;
+			vss<<"cloud_cluster_"<<modname<<"_"<<count<<"_vfh"<<".pcd";
+			pcl::io::savePCDFileASCII (ss.str(), *cloud);
+			pcl::io::savePCDFileASCII (vss.str(), *vfhs);
+			//writer.write<pcl::PointXYZ>(ss.str(),cloud,false);
+			//printf(modname.c_str());
+			// for (size_t i = 0; i < cloud.points.size (); ++i)
+   //  			std::cerr << "    " << cloud.points[i].x << " " << cloud.points[i].y << " " << cloud.points[i].z << std::endl;
+			ROS_INFO("record success ,%d",count);
+			count++;
+
+		}
+		
 
 	}
 
@@ -87,6 +132,3 @@ int main(int argc, char** argv)
   ros::spin();
   return 0;
 }
-
-
-
