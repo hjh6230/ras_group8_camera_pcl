@@ -25,7 +25,7 @@
 
 typedef std::pair<std::string, std::vector<float> > vfh_model;
 
-class recordPC
+class recog
 {
 public:	
 	ros::NodeHandle& nodeHandle_;
@@ -40,7 +40,7 @@ public:
 	int maxsample;
 	std::string modname;
 
-	recordPC(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
+	recog(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
 	{
 		// if (!readParameters()) {
 	 //    ROS_ERROR("Could not read parameters.");
@@ -49,15 +49,15 @@ public:
 		maxsample=20;
 		modname="Cube";
 	  count=0;
-	  PCsub_=nodeHandle_.subscribe("/pcl_tut/cluster0",1,&recordPC::recordCB,this);
+	  PCsub_=nodeHandle_.subscribe("/pcl_tut/cluster0",1,&recog::recogCB,this);
 	  shape_pub_ =
-    	node_handle_.advertise<std_msgs::String>("/detect/shape", 1);
+    	nodeHandle_.advertise<std_msgs::String>("/detect/shape", 1);
 	  ROS_INFO("Successfully launchednode.");
 
 
 
 	}
-	virtual ~recordPC()
+	virtual ~recog()
 	{
 	}
 
@@ -73,7 +73,7 @@ public:
 
 	// }
 
-	void recordCB(const sensor_msgs::PointCloud2ConstPtr& input)
+	void recogCB(const sensor_msgs::PointCloud2ConstPtr& input)
 	{
 			//pcl::PCDWriter writer;
 			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
@@ -144,16 +144,16 @@ public:
 
 	  vfh.second.resize (308);
 
-	  vfh_idx = pcl::getFieldIndex (cloud, "vfh");
+	  //vfh_idx = pcl::getFieldIndex (point, "vfh");
 
-	  std::vector <pcl::PCLPointField> fields;
-	  getFieldIndex (point, "vfh", fields);
+	  //std::vector <pcl::PCLPointField> fields;
+	  //getFieldIndex (point, "vfh", fields);
 
-	  for (size_t i = 0; i < fields[vfh_idx].count; ++i)
+	  for (size_t i = 0; i < 308; ++i)
 	  {
 	    vfh.second[i] = point.points[0].histogram[i];
 	  }
-	  vfh.first = path.string ();
+	  vfh.first = "object";
 	  return (true);
 	}
 
@@ -212,7 +212,7 @@ public:
 		std::string training_data_h5_file_name = "training_data.h5";
 		std::string training_data_list_file_name = "training_data.list";
 
-		td::vector<vfh_model> models;
+		std::vector<vfh_model> models;
 		  flann::Matrix<int> k_indices;
 		  flann::Matrix<float> k_distances;
 		  flann::Matrix<float> data;
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "ras_group8_recog");
   ros::NodeHandle nodeHandle("~");
   ros::Rate loop_rate(1.0);
-  recognition rg(nodeHandle);
+  recog rg(nodeHandle);
 
   for (;;) {
       ros::spinOnce();

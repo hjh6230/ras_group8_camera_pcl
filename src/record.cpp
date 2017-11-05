@@ -12,7 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include "string"
 
-class recognization
+class recordPC
 {
 public:	
 	ros::NodeHandle& nodeHandle_;
@@ -25,7 +25,7 @@ public:
 	int maxsample;
 	std::string modname;
 
-	recognization(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
+	recordPC(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
 	{
 		// if (!readParameters()) {
 	 //    ROS_ERROR("Could not read parameters.");
@@ -34,13 +34,13 @@ public:
 		maxsample=20;
 		modname="Cube";
 	  count=0;
-	  PCsub_=nodeHandle_.subscribe("/pcl_tut/cluster0",1,&recognization::recognizationCB,this);
+	  PCsub_=nodeHandle_.subscribe("/pcl_tut/cluster0",1,&recordPC::recordCB,this);
 	  ROS_INFO("Successfully launchednode.");
 
 
 
 	}
-	virtual ~recognization()
+	virtual ~recordPC()
 	{
 	}
 
@@ -59,7 +59,7 @@ public:
 
 	// }
 
-	void recognizationCB(const sensor_msgs::PointCloud2ConstPtr& input)
+	void recordCB(const sensor_msgs::PointCloud2ConstPtr& input)
 	{
 		if(count<maxsample)
 		{

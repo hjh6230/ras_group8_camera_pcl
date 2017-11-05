@@ -14,11 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
 )
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(FLANN REQUIRED flann)
-if(FLANN_CFLAGS)
-   add_definitions(${FLANN_CFLAGS})
- endif(FLANN_CFLAGS) 
+ 
 
 find_package(PCL 1.3 REQUIRED)
 
@@ -111,6 +107,21 @@ find_package(PCL 1.3 REQUIRED)
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FLANN REQUIRED flann)
+
+link_directories(${FLANN_LIBRARY_DIRS})
+include_directories(${FLANN_INCLUDE_DIRS})
+
+if(FLANN_CFLAGS)
+   add_definitions(${FLANN_CFLAGS})
+ endif(FLANN_CFLAGS)
+
+find_package(HDF5 REQUIRED)
+include_directories(${HDF5_INCLUDE_DIR})
+
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ras_group8_camera_pcl
@@ -154,6 +165,7 @@ add_executable(example_planarsegmentation src/example_planarsegmentation.cpp)
 add_executable (segmentation src/segmentation.cpp)
 add_executable (outlier_removal src/outlier_removal.cpp)
 add_executable(record src/record.cpp)
+add_executable(recognition src/recognization.cpp)
 #add_executable (cluster_extraction src/cluster_extraction.cpp)
 
 ## Rename C++ executable without prefix
@@ -175,6 +187,7 @@ target_link_libraries(example_planarsegmentation ${catkin_LIBRARIES})
 target_link_libraries (segmentation ${PCL_LIBRARIES})
 target_link_libraries (outlier_removal ${catkin_LIBRARIES})
 target_link_libraries(record ${catkin_LIBRARIES})
+target_link_libraries(recognition ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY} ${catkin_LIBRARIES})
 #target_link_libraries (cluster_extraction ${catkin_LIBRARIES})
 #target_link_libraries (cluster_extraction ${PCL_LIBRARIES})
 
@@ -184,16 +197,9 @@ target_link_libraries(record ${catkin_LIBRARIES})
  
 
 
-find_package(HDF5)
-
-if(HDF5_FOUND)
 
 
-add_executable(ras_group8_recognition src/recognition.cpp)
-  target_link_libraries(ras_group8_recognition ${PCL_LIBRARIES} 
-                                        ${Boost_LIBRARIES} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY} 
-                                        )
-endif(HDF5_FOUND)
+
 
 #############
 ## Install ##
