@@ -39,6 +39,7 @@ public:
 	int count;
 	int maxsample;
 	std::string modname;
+	std::string message;
 
 	recog(ros::NodeHandle& nodeHandle): nodeHandle_(nodeHandle)
 	{
@@ -48,10 +49,12 @@ public:
 	 //  }
 		maxsample=20;
 		modname="Cube";
+		message="";
+
 	  count=0;
 	  PCsub_=nodeHandle_.subscribe("/pcl_tut/cluster0",1,&recog::recogCB,this);
 	  shape_pub_ =
-    	nodeHandle_.advertise<std_msgs::String>("/detect/shape", 1);
+    	nodeHandle_.advertise<std_msgs::String>("/Object_detection/shape", 1);
 	  ROS_INFO("Successfully launchednode.");
 
 
@@ -103,11 +106,13 @@ public:
 			  // Compute the features
 			vfh.compute (*vfhs);
 			count++;
+			ROS_INFO("vfhs loaded, go to compare");
 
-			if (count==1)
-			{
-				compare(*vfhs);
-			}
+			compare(*vfhs);
+			std_msgs::String msg;
+			msg.data=message;
+			shape_pub_.publish(msg);
+		
 
 
 
@@ -117,7 +122,8 @@ public:
 	bool
 	loadHist (const pcl::PointCloud<pcl::VFHSignature308> &point, vfh_model &vfh)
 	{
-	  int vfh_idx;
+	  //int vfh_idx;
+	  ROS_INFO("Loadhist");
 	  // // Load the file as a PCD
 	  // try
 	  // {
@@ -231,9 +237,35 @@ public:
 
 		  // Output the results on screen
 		  pcl::console::print_highlight ("The closest %d neighbors are:\n", k);
+		  int vote[2]={0,0};
+		  //cube, star
 		  for (int i = 0; i < k; ++i)
-		    pcl::console::print_info ("    %d - %s (%d) with a distance of: %f\n", 
+		  {
+		  	pcl::console::print_info ("    %d - %s (%d) with a distance of: %f\n", 
 		        i, models.at (k_indices[0][i]).first.c_str (), k_indices[0][i], k_distances[0][i]);	  
+		  	std::string name=models.at (k_indices[0][i]).first;
+			std::size_t found = name.find("Cube");
+  			if (found!=std::string::npos) vote[0]++;
+  			found = name.find("Star");
+  			if (found!=std::string::npos) vote[1]++;
+		  }
+		  int order=0;
+		  int max=0;
+		  for (int i=0;i<2;i++)
+		  {
+		  	if (vote[i]>max)
+		  	{
+		  		order=i;
+		  		max=vote[i];
+		  	}
+
+		  }
+		  if (order==0) message="Cube";
+		  else if(order==1) message="Star";
+
+
+
+		    
 	}
 
 
